@@ -16,7 +16,7 @@ delete-target-groups() {
 
   for next in $(OUT=text ATTR=TargetGroupArn ./ec2 ::list-target-groups); do
     debug deleting TargetGroup: ${next} ...
-    ${DRY:+echo} aws elbv2 delete-target-group \
+    ${DRY:+echo [dry-run] } aws elbv2 delete-target-group \
       --target-group-arn ${next}
   done
 }
@@ -30,7 +30,7 @@ list-lbs() {
 delete-lbs() {
   for next in $(OUT=text ATTR=LoadBalancerArn list-lbs); do
     debug deleting LoadBalancer: ${next} ...
-    ${DRY:+echo} aws elbv2 delete-load-balancer \
+    ${DRY:+echo [dry-run] } aws elbv2 delete-load-balancer \
       --load-balancer-arn ${next}
   done
 }
