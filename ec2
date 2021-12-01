@@ -12,6 +12,14 @@ list-target-groups() {
     --out ${OUT:-table}
 }
 
+delete-target-groups() {
+
+  for next in $(OUT=text list-target-groups); do
+    debug deleting TargetGroup: ${next} ...
+
+  done
+}
+
 list-lbs() {
   aws elbv2 describe-load-balancers \
     --query 'LoadBalancers[].LoadBalancerName' \
@@ -19,8 +27,8 @@ list-lbs() {
 }
 
 delete-lbs() {
-  for lb in $(OUT=text list-lbs); do
-    debug deleting loadBalancer: ${lb} ...
+  for next in $(OUT=text list-lbs); do
+    debug deleting LoadBalancer: ${next} ...
 
   done
 }
