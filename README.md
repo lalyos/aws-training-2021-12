@@ -17,3 +17,8 @@ to run one of the functions, use the function name prefixed with `::`
 ```
 ./ec2 ::list-lbs
 ```
+### debug log
+
+Any command can print debug level messages by:
+- appending a `-d` parameter to the end
+- setting the `DEBUG` env variable for permanent effect
