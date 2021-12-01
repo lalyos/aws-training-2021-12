@@ -72,6 +72,13 @@ list-commands() {
    | sort
 }
 
+prune() {
+  delete-lbs
+  delete-target-groups
+  delete-images
+  delete-snapshots
+}
+
 main() {
   # if last arg is -d sets DEBUG
   [[ ${@:$#} =~ -d ]] && { set -- "${@:1:$(($#-1))}" ; DEBUG=1 ; } || :
