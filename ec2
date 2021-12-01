@@ -31,8 +31,23 @@ list-images() {
 delete-images() {
   for next in $(OUT=text ATTR=ImageId list-images); do
     debug deleting Images: ${next} ...
-    ${DRY:+echo [dry-run] } deregister-image \
+    ${DRY:+echo [dry-run] } aws ec2 deregister-image \
       --image-id ${next}
+  done
+}
+
+list-snapshots() {
+  aws ec2 describe-snapshots \
+    --owner-ids self \
+    --query "Snapshots[].${ATTR:-SnapshotId}" \
+    --out ${OUT:-table}
+}
+
+delete-snapshots() {
+  for next in $(OUT=text ATTR=SnapshotId list-snapshots); do
+    debug deleting Snapshots: ${next} ...
+    ${DRY:+echo [dry-run] } aws ec2 delete-snapshot \
+      --snapshot-id ${next}
   done
 }
 
