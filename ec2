@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+debug() {
+    if ((DEBUG)); then
+       echo "===> [${FUNCNAME[1]}] $*" 1>&2
+    fi
+}
+
+list-target-groups() {
+  aws elbv2 describe-target-groups \
+    --query 'TargetGroups[].TargetGroupName' \
+    --out ${OUT:-table}
+}
+
+list-lbs() {
+  aws elbv2 describe-load-balancers \
+    --query 'LoadBalancers[].LoadBalancerName' \
+    --out ${OUT:-table}
+}
+
+delete-lbs() {
+  for lb in $(OUT=text list-lbs); do
+    debug deleting loadBalancer: ${lb} ...
+
+  done
+}
+
+list-commands() {
+  echo "available commands:"
+  sed -n 's/\(.*\)().*/  ::\1/p' ${BASH_SOURCE} | grep -v 'main\|debug\|sed'
+}
+
+main() {
+  # if last arg is -d sets DEBUG
+  [[ ${@:$#} =~ -d ]] && { set -- "${@:1:$(($#-1))}" ; DEBUG=1 ; } || :
+
+  if [[ $1 =~ :: ]]; then 
+    debug DIRECT-COMMAND  ...
+    command=${1#::}
+    shift
+    $command "$@"
+  else 
+    debug default-command
+    list-commands
+  fi 
+}
+
+alias r=". $BASH_SOURCE"
+[[ "$0" == "$BASH_SOURCE" ]] && main "$@" || true
