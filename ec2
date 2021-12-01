@@ -37,7 +37,9 @@ delete-lbs() {
 
 list-commands() {
   echo "available commands:"
-  sed -n 's/\(.*\)().*/  ::\1/p' ${BASH_SOURCE} | grep -v 'main\|debug\|sed'
+  sed -n 's/\(.*\)().*/  ::\1/p' ${BASH_SOURCE} \
+   | grep -v 'main\|debug\|sed' \
+   | sort
 }
 
 main() {
