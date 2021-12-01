@@ -1,0 +1,2 @@
+
+Start the Create Stack on AWS console: [![Launch Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home?region=eu-central-1#/stacks/new?stackName=billingAlarm&templateURL=https://lalyos-cf.s3.eu-central-1.amazonaws.com/cf-coffe-break.yaml)
