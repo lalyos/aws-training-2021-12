@@ -17,6 +17,14 @@ to run one of the functions, use the function name prefixed with `::`
 ```
 ./ec2 ::list-lbs
 ```
+
+### dry run
+
+You can dry-run any command by setting the `DRY` env variable to any value:
+```
+DRY=1 ./ec2 ::delete-target-groups
+```
+
 ### debug log
 
 Any command can print debug level messages by:
