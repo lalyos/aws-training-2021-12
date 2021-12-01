@@ -21,6 +21,21 @@ delete-target-groups() {
   done
 }
 
+list-images() {
+  aws ec2 describe-images \
+    --owners self \
+    --query "Images[].${ATTR:-Name}" \
+    --out ${OUT:-table}
+}
+
+delete-images() {
+  for next in $(OUT=text ATTR=ImageId list-images); do
+    debug deleting Images: ${next} ...
+    ${DRY:+echo [dry-run] } deregister-image \
+      --image-id ${next}
+  done
+}
+
 list-lbs() {
   aws elbv2 describe-load-balancers \
     --query "LoadBalancers[].${ATTR:-LoadBalancerName}" \
