@@ -72,6 +72,17 @@ list-commands() {
    | sort
 }
 
+create-coffe-stack() {
+  ${DRY:+echo [dry-run] } aws cloudformation create-stack \
+    --stack-name coffe-$(date +%M) \
+    --template-url https://lalyos-cf.s3.eu-central-1.amazonaws.com/cf-coffe-break.yaml \
+    --parameters \
+        ParameterKey=KeyName,ParameterValue=$(aws ec2 describe-key-pairs --query "KeyPairs[0].KeyName" --out text) \
+        ParameterKey=EIPAllocId,ParameterValue=$(aws ec2 describe-addresses --query Addresses[0].AllocationId --out text) \
+        ParameterKey=Color,ParameterValue=brown \
+        ParameterKey=BreakTime,ParameterValue=$(date +%H:%M --date='10 minutes')
+}
+
 prune() {
   delete-lbs
   delete-target-groups
@@ -83,15 +94,15 @@ main() {
   # if last arg is -d sets DEBUG
   [[ ${@:$#} =~ -d ]] && { set -- "${@:1:$(($#-1))}" ; DEBUG=1 ; } || :
 
-  if [[ $1 =~ :: ]]; then 
+  if [[ $1 =~ :: ]]; then
     debug DIRECT-COMMAND  ...
     command=${1#::}
     shift
     $command "$@"
-  else 
+  else
     debug default-command
     list-commands
-  fi 
+  fi
 }
 
 alias r=". $BASH_SOURCE"
