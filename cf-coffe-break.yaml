@@ -1,0 +1,191 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: creates coffe break nginx instance
+Parameters:
+  EIPAllocId:
+    Description: The ElasticIp AllocationId you want to assign to the instance
+    Type: String
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: Can contain only ASCII characters.
+  BreakTime:
+    Description: Time showing the end of the coffe break
+    Type: String
+  InstanceType:
+    Description: WebServer EC2 instance type
+    Type: String
+    Default: t2.small
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t3.micro
+      - t3.small
+      - t3.medium
+  Color:
+    Type: String
+    Default: indigo
+    AllowedValues:
+        - red
+        - pink
+        - purple
+        - deep-purple
+        - indigo
+        - blue
+        - light-blue
+        - cyan
+        - teal
+        - green
+        - light-green
+        - lime
+        - khaki
+        - yellow
+        - amber
+        - orange
+        - deep-orange
+        - blue-grey
+        - brown
+        - grey
+        - dark-grey
+        - black
+        - w3schools
+
+Resources:
+  myVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.111.0.0/16
+      EnableDnsSupport: true
+      Tags:
+        - Key: training
+          Value: aws
+        - Key: Name
+          Value: coffe
+  subnet1c:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: eu-central-1c
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref myVPC
+      CidrBlock: 172.111.32.0/20
+      Tags:
+        - Key: Name
+          Value: coffe-subnet-1c
+
+  myigw:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: coffe-igw
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref myVPC
+      InternetGatewayId: !Ref myigw
+
+  myrouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref myVPC
+      Tags:
+        - Key: Name
+          Value: coffe-rt
+  routeName:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref myrouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref myigw
+  routeTableAssocName:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref subnet1c
+      RouteTableId: !Ref myrouteTable
+
+  AssociateWebPort:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !Ref EIPAllocId
+      NetworkInterfaceId: !Ref webXface
+  webXface:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      SubnetId: !Ref subnet1c
+      Description: Interface for controlling traffic such as HTTP
+      GroupSet:
+      - !Ref secGroupCoffe
+      SourceDestCheck: true
+      Tags:
+        - Key: Network
+          Value: Web
+
+  coffeInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref KeyName
+      ImageId: ami-0a49b025fffbbdac6
+      InstanceType: !Ref InstanceType
+      #SubnetId: !Ref subnet1c
+      Monitoring: true
+      NetworkInterfaces:
+      - NetworkInterfaceId: !Ref webXface
+        DeviceIndex: 0
+      # SecurityGroupIds:
+      #   - !Ref secGroupCoffe
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -ex
+            apt-get install -y nginx
+            cat > /var/www/html/index.html <<EOF
+            <html>
+            <head>
+                <title>Coffee Break</title>
+                <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+                <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-${Color}.css">
+            </head>
+            <body>
+                <div class="w3-card-4">
+                    <div class="w3-container w3-theme w3-card">
+                      <h1>Coffee Break</h1>
+                    </div>
+
+                    <div class="w3-container w3-text-theme">
+                    <h2>Until ... ${BreakTime}</h2></div>
+                </div>
+            </body>
+            </html>
+            EOF
+      Tags:
+        - Key: Name
+          Value: coffe-web
+        - Key: training
+          Value: aws
+
+  secGroupCoffe:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: coffe-break
+      GroupDescription: Allows ssh and http access
+      VpcId: !Ref myVPC
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: 22
+          IpProtocol: tcp
+          ToPort: 22
+        - CidrIp: 0.0.0.0/0
+          FromPort: 80
+          IpProtocol: tcp
+          ToPort: 80
+      Tags:
+        - Key: trainig
+          Value: aws
+
+Outputs:
+  InstanceID:
+    Description: The Instance ID
+    Value: !Ref coffeInstance
+  PublicIP:
+    Description: Public IP of the webserver
+    Value: !GetAtt coffeInstance.PublicIp
